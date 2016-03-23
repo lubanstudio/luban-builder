@@ -23,7 +23,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
-const APP_VER = "0.0.1.0321"
+const APP_VER = "0.0.2.0323"
 
 func main() {
 	log.Info("Luban Builder ", APP_VER)
@@ -56,7 +56,7 @@ func main() {
 	if len(errs) > 0 {
 		log.Fatalf("Fail to update matrix info: %v", errs[0])
 	}
-	if resp.StatusCode != 204 {
+	if resp.StatusCode/100 != 2 {
 		log.Fatalf("Unexpected response status '%d' for updating matrix info.", resp.StatusCode)
 	}
 

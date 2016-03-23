@@ -15,13 +15,26 @@
 package main
 
 import (
-	"fmt"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/parnurzeal/gorequest"
 )
 
 func Heartbeating() {
 	for {
-		time.Sleep(time.Second)
-		fmt.Println(time.Now())
+		resp, _, errs := gorequest.New().Post(EndPoint+"/builder/heartbeat").
+			Set("X-LUBAN-TOKEN", Token).
+			Set("X-LUBAN-STATUS", "IDLE").End()
+		if len(errs) > 0 {
+			log.Errorf("Fail to heart beat: %v", errs[0])
+			continue
+		}
+		if resp.StatusCode/100 != 2 {
+			log.Errorf("Unexpected response status '%d' for heart beating.", resp.StatusCode)
+			continue
+		}
+
+		time.Sleep(10 * time.Second)
 	}
 }
