@@ -23,7 +23,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
-const APP_VER = "0.0.3.0902"
+const APP_VER = "0.0.4.0902"
 
 func main() {
 	log.Info("Luban Builder ", APP_VER)
