@@ -23,7 +23,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
-const APP_VER = "0.0.2.0323"
+const APP_VER = "0.0.3.0902"
 
 func main() {
 	log.Info("Luban Builder ", APP_VER)
@@ -57,9 +57,11 @@ func main() {
 		log.Fatalf("Fail to update matrix info: %v", errs[0])
 	}
 	if resp.StatusCode/100 != 2 {
-		log.Fatalf("Unexpected response status '%d' for updating matrix info.", resp.StatusCode)
+		log.Fatalf("Unexpected response status '%d' for updating matrix info:\n%s", resp.StatusCode, resp.Body)
 	}
 
 	log.Info("All going well, start heart beating...")
-	Heartbeating()
+	go Heartbeating()
+
+	select {}
 }
