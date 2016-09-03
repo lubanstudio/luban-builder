@@ -83,7 +83,16 @@ func Build() {
 	logger.Write(stdout)
 	logger.Write(stderr)
 
-	logger.WriteString("$ git checkout ...\n")
+	logger.WriteString("$ git fetch origin\n")
+	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "git", "fetch", "origin")
+	if err != nil {
+		log.Errorf("Fail to git fetch: %v - %s", err, stderr)
+		return
+	}
+	logger.Write(stdout)
+	logger.Write(stderr)
+
+	logger.WriteString(fmt.Sprintf("$ git checkout %s\n", buildInfo.Task.Commit))
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "git", "checkout", buildInfo.Task.Commit)
 	if err != nil {
 		log.Errorf("Fail to git checkout: %v - %s", err, stderr)
