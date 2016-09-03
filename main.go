@@ -23,7 +23,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
-const APP_VER = "0.0.4.0902"
+const APP_VER = "0.1.0.0903"
 
 func main() {
 	log.Info("Luban Builder ", APP_VER)
@@ -52,7 +52,8 @@ func main() {
 	}
 
 	resp, _, errs := gorequest.New().Post(EndPoint+"/builder/matrix").
-		Set("X-LUBAN-TOKEN", Token).SendString(string(MatricesData)).End()
+		Set("X-LUBAN-TOKEN", Token).
+		SendString(string(MatricesData)).End()
 	if len(errs) > 0 {
 		log.Fatalf("Fail to update matrix info: %v", errs[0])
 	}

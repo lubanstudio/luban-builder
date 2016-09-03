@@ -15,10 +15,12 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"path"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/Unknwon/cae/tz"
+	"github.com/Unknwon/cae/zip"
 	"github.com/Unknwon/com"
 )
 
@@ -39,11 +41,13 @@ type BuildInfo struct {
 var buildInfo *BuildInfo
 
 func Build() {
+	log.Infof("Building task: %d - %s", buildInfo.Task.ID, buildInfo.ImportPath)
+
 	defer func() {
 		if status == STATUS_BUILDING {
-			log.Debug("Status changed to: STATUS_FAILED")
 			status = STATUS_FAILED
 		}
+		log.Debugf("Status changed to: %s", status)
 	}()
 
 	os.Mkdir("log", os.ModePerm)
@@ -54,24 +58,90 @@ func Build() {
 	}
 	defer logger.Close()
 
-	stdout, stderr, err := com.ExecCmd("go", "get", "-u", "-v", "-tags", buildInfo.Task.Tags, buildInfo.ImportPath)
-	if err != nil {
-		log.Errorf("Fail to go get: %v - %s", err, stderr)
-		return
-	}
-	fmt.Println(stdout)
+	gopath := com.GetGOPATHs()[0]
+	execDir := path.Join(gopath, "src", buildInfo.ImportPath)
 
-	stdout, stderr, err = com.ExecCmdDir(os.Getenv("GOPATH")+"/src/"+buildInfo.ImportPath, "git", "checkout", buildInfo.Task.Commit)
+	// Checkout source code and compile.
+	logger.WriteString("$ git checkout master\n")
+	stdout, stderr, err := com.ExecCmdDirBytes(execDir, "git", "checkout", "master")
 	if err != nil {
 		log.Errorf("Fail to git checkout: %v - %s", err, stderr)
 		return
 	}
-	fmt.Println(stdout)
+	logger.Write(stdout)
+	logger.Write(stderr)
 
-	stdout, stderr, err = com.ExecCmdDir(os.Getenv("GOPATH")+"/src/"+buildInfo.ImportPath, "go", "build", "-v", "-tags", buildInfo.Task.Tags)
+	logger.WriteString("$ go get ...\n")
+	stdout, stderr, err = com.ExecCmdBytes("go", "get", "-u", "-v", "-tags", buildInfo.Task.Tags, buildInfo.ImportPath)
+	if err != nil {
+		log.Errorf("Fail to go get: %v - %s", err, stderr)
+		return
+	}
+	logger.Write(stdout)
+	logger.Write(stderr)
+
+	logger.WriteString("$ git checkout ...\n")
+	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "git", "checkout", buildInfo.Task.Commit)
+	if err != nil {
+		log.Errorf("Fail to git checkout: %v - %s", err, stderr)
+		return
+	}
+	logger.Write(stdout)
+	logger.Write(stderr)
+
+	logger.WriteString("$ go build ...\n")
+	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "go", "build", "-v", "-tags", buildInfo.Task.Tags)
 	if err != nil {
 		log.Errorf("Fail to go build: %v - %s", err, stderr)
 		return
 	}
-	fmt.Println(stdout)
+	logger.Write(stdout)
+	logger.Write(stderr)
+
+	// Pack artifacts.
+	log.Infof("Packing artifacts: %d - %s", buildInfo.Task.ID, buildInfo.ImportPath)
+	os.Mkdir("artifacts", os.ModePerm)
+	artifactPath := path.Join("artifacts", com.ToStr(buildInfo.Task.ID))
+	for _, ext := range buildInfo.PackFormats {
+		tmpPath := artifactPath + "." + ext
+
+		switch ext {
+		case "tar.gz":
+			artifact, err := tz.Create(tmpPath)
+			if err != nil {
+				log.Errorf("Fail to create artifact '%s': %v", tmpPath, err)
+				return
+			}
+
+			for _, entry := range buildInfo.PackEntries {
+				entryPath := path.Join(execDir, entry)
+				if com.IsDir(entryPath) {
+					artifact.AddDir(path.Join(buildInfo.PackRoot, entry), entryPath)
+				} else {
+					artifact.AddFile(path.Join(buildInfo.PackRoot, entry), entryPath)
+				}
+			}
+			artifact.Close()
+
+		case "zip":
+			artifact, err := zip.Create(tmpPath)
+			if err != nil {
+				log.Errorf("Fail to create artifact '%s': %v", tmpPath, err)
+				return
+			}
+
+			for _, entry := range buildInfo.PackEntries {
+				entryPath := path.Join(execDir, entry)
+				if com.IsDir(entryPath) {
+					artifact.AddDir(path.Join(buildInfo.PackRoot, entry), entryPath)
+				} else {
+					artifact.AddFile(path.Join(buildInfo.PackRoot, entry), entryPath)
+				}
+			}
+			artifact.Close()
+		}
+	}
+
+	status = STATUS_UPLOADING
+	Upload()
 }

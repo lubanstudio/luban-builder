@@ -22,35 +22,36 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
-type Status int
+type Status string
 
 const (
-	STATUS_IDLE Status = iota
-	STATUS_BUILDING
-	STATUS_UPLOADING
-	STATUS_FAILED
-	STATUS_SUCCEED
+	STATUS_IDLE      Status = "IDLE"
+	STATUS_BUILDING  Status = "BUILDING"
+	STATUS_UPLOADING Status = "UPLOADING"
+	STATUS_FAILED    Status = "FAILED"
+	STATUS_SUCCEED   Status = "SUCCEED"
 )
 
-var status Status
+var status = STATUS_IDLE
 
 func Heartbeating() {
 	defer time.AfterFunc(15*time.Second, Heartbeating)
 
+	resp, _, errs := gorequest.New().Post(EndPoint+"/builder/heartbeat").
+		Set("X-LUBAN-TOKEN", Token).
+		Set("X-LUBAN-STATUS", string(status)).End()
+	if len(errs) > 0 {
+		log.Errorf("Fail to heart beat: %v", errs[0])
+		return
+	}
+
+	if resp.StatusCode/100 != 2 {
+		log.Errorf("Unexpected response status '%d' for heart beating.\n%s", resp.StatusCode, resp.Body)
+		return
+	}
+
 	switch status {
 	case STATUS_IDLE:
-		resp, _, errs := gorequest.New().Post(EndPoint+"/builder/heartbeat").
-			Set("X-LUBAN-TOKEN", Token).
-			Set("X-LUBAN-STATUS", "IDLE").End()
-		if len(errs) > 0 {
-			log.Errorf("Fail to heart beat: %v", errs[0])
-			return
-		}
-		if resp.StatusCode/100 != 2 {
-			log.Errorf("Unexpected response status '%d' for heart beating.\n%s", resp.StatusCode, resp.Body)
-			return
-		}
-
 		if resp.Header.Get("X-LUBAN-TASK") == "ASSIGN" {
 			buildInfo = new(BuildInfo)
 			if err := json.NewDecoder(resp.Body).Decode(buildInfo); err != nil {
@@ -61,19 +62,7 @@ func Heartbeating() {
 			Build()
 		}
 
-	case STATUS_FAILED:
-		resp, _, errs := gorequest.New().Post(EndPoint+"/builder/heartbeat").
-			Set("X-LUBAN-TOKEN", Token).
-			Set("X-LUBAN-STATUS", "FAILED").End()
-		if len(errs) > 0 {
-			log.Errorf("Fail to heart beat: %v", errs[0])
-			return
-		}
-		if resp.StatusCode/100 != 2 {
-			log.Errorf("Unexpected response status '%d' for heart beating.\n%s", resp.StatusCode, resp.Body)
-			return
-		}
-
+	case STATUS_FAILED, STATUS_SUCCEED:
 		status = STATUS_IDLE
 	}
 }
