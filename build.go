@@ -75,7 +75,7 @@ func Build() {
 
 	tags := strings.Replace(buildInfo.Task.Tags, ",", " ", -1)
 	logger.WriteString(fmt.Sprintf("$ go get -u -v -tags %s %s\n", tags, buildInfo.ImportPath))
-	stdout, stderr, err = com.ExecCmdBytes("go", "get", "-v", "-tags", tags, buildInfo.ImportPath)
+	stdout, stderr, err = com.ExecCmdBytes("go", "get", "-u", "-v", "-tags", tags, buildInfo.ImportPath)
 	if err != nil {
 		log.Errorf("Fail to go get: %v - %s", err, stderr)
 		return
