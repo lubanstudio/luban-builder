@@ -15,8 +15,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/Unknwon/cae/tz"
@@ -71,8 +73,9 @@ func Build() {
 	logger.Write(stdout)
 	logger.Write(stderr)
 
-	logger.WriteString("$ go get ...\n")
-	stdout, stderr, err = com.ExecCmdBytes("go", "get", "-u", "-v", "-tags", buildInfo.Task.Tags, buildInfo.ImportPath)
+	tags := strings.Replace(buildInfo.Task.Tags, ",", " ", -1)
+	logger.WriteString(fmt.Sprintf("$ go get -u -v -tags %s %s\n", tags, buildInfo.ImportPath))
+	stdout, stderr, err = com.ExecCmdBytes("go", "get", "-v", "-tags", tags, buildInfo.ImportPath)
 	if err != nil {
 		log.Errorf("Fail to go get: %v - %s", err, stderr)
 		return
@@ -89,8 +92,8 @@ func Build() {
 	logger.Write(stdout)
 	logger.Write(stderr)
 
-	logger.WriteString("$ go build ...\n")
-	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "go", "build", "-v", "-tags", buildInfo.Task.Tags)
+	logger.WriteString(fmt.Sprintf("$ go build -v tags %s\n", tags))
+	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "go", "build", "-v", "-tags", tags)
 	if err != nil {
 		log.Errorf("Fail to go build: %v - %s", err, stderr)
 		return
