@@ -59,7 +59,7 @@ func Heartbeating() {
 				return
 			}
 			status = STATUS_BUILDING
-			Build()
+			go Build()
 		}
 
 	case STATUS_FAILED, STATUS_SUCCEED:
