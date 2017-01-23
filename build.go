@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -63,6 +64,8 @@ func Build() {
 	gopath := com.GetGOPATHs()[0]
 	execDir := path.Join(gopath, "src", buildInfo.ImportPath)
 
+	runtime.Gosched()
+
 	// Checkout source code and compile.
 	logger.WriteString("$ git checkout master\n")
 	stdout, stderr, err := com.ExecCmdDirBytes(execDir, "git", "checkout", "master")
@@ -72,6 +75,8 @@ func Build() {
 	}
 	logger.Write(stdout)
 	logger.Write(stderr)
+
+	runtime.Gosched()
 
 	tags := strings.Replace(buildInfo.Task.Tags, ",", " ", -1)
 	logger.WriteString(fmt.Sprintf("$ go get -u -v -tags %s %s\n", tags, buildInfo.ImportPath))
@@ -83,6 +88,8 @@ func Build() {
 	logger.Write(stdout)
 	logger.Write(stderr)
 
+	runtime.Gosched()
+
 	logger.WriteString("$ git fetch origin\n")
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "git", "fetch", "origin")
 	if err != nil {
@@ -91,6 +98,8 @@ func Build() {
 	}
 	logger.Write(stdout)
 	logger.Write(stderr)
+
+	runtime.Gosched()
 
 	logger.WriteString(fmt.Sprintf("$ git checkout %s\n", buildInfo.Task.Commit))
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "git", "checkout", buildInfo.Task.Commit)
@@ -101,6 +110,8 @@ func Build() {
 	logger.Write(stdout)
 	logger.Write(stderr)
 
+	runtime.Gosched()
+
 	logger.WriteString(fmt.Sprintf("$ go build -v tags %s\n", tags))
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "go", "build", "-v", "-tags", tags)
 	if err != nil {
@@ -109,6 +120,8 @@ func Build() {
 	}
 	logger.Write(stdout)
 	logger.Write(stderr)
+
+	runtime.Gosched()
 
 	// Pack artifacts.
 	log.Infof("Packing artifacts: %d - %s", buildInfo.Task.ID, buildInfo.ImportPath)

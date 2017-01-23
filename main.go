@@ -17,16 +17,22 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"runtime"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/Unknwon/com"
 	"github.com/parnurzeal/gorequest"
 )
 
-const APP_VER = "0.1.2.0903"
+const APP_VER = "0.1.3.0123"
+
+func init() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+}
 
 func main() {
 	log.Info("Luban Builder ", APP_VER)
+	log.Info("GOMAXPROCS: ", runtime.NumCPU())
 
 	if len(EndPoint) == 0 {
 		fmt.Print("Please enter the server end point: ")
