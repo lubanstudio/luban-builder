@@ -24,7 +24,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
-const APP_VER = "0.1.3.0123"
+const APP_VER = "0.1.4.0128"
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())

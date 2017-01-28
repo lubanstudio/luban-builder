@@ -16,6 +16,7 @@ package main
 
 import (
 	"fmt"
+	glog "log"
 	"os"
 	"path"
 	"runtime"
@@ -54,12 +55,13 @@ func Build() {
 	}()
 
 	os.Mkdir("log", os.ModePerm)
-	logger, err := os.Create("log/" + com.ToStr(buildInfo.Task.ID) + ".output")
+	output, err := os.Create("log/" + com.ToStr(buildInfo.Task.ID) + ".output")
 	if err != nil {
 		log.Errorf("Fail to create log file: %v", err)
 		return
 	}
-	defer logger.Close()
+	defer output.Close()
+	glog.SetOutput(output)
 
 	gopath := com.GetGOPATHs()[0]
 	execDir := path.Join(gopath, "src", buildInfo.ImportPath)
@@ -67,59 +69,59 @@ func Build() {
 	runtime.Gosched()
 
 	// Checkout source code and compile.
-	logger.WriteString("$ git checkout master\n")
+	glog.Println("$ git checkout master")
 	stdout, stderr, err := com.ExecCmdDirBytes(execDir, "git", "checkout", "master")
 	if err != nil {
 		log.Errorf("Fail to git checkout: %v - %s", err, stderr)
 		return
 	}
-	logger.Write(stdout)
-	logger.Write(stderr)
+	output.Write(stdout)
+	output.Write(stderr)
 
 	runtime.Gosched()
 
 	tags := strings.Replace(buildInfo.Task.Tags, ",", " ", -1)
-	logger.WriteString(fmt.Sprintf("$ go get -u -v -tags %s %s\n", tags, buildInfo.ImportPath))
+	glog.Println(fmt.Sprintf("$ go get -u -v -tags %s %s", tags, buildInfo.ImportPath))
 	stdout, stderr, err = com.ExecCmdBytes("go", "get", "-u", "-v", "-tags", tags, buildInfo.ImportPath)
 	if err != nil {
 		log.Errorf("Fail to go get: %v - %s", err, stderr)
 		return
 	}
-	logger.Write(stdout)
-	logger.Write(stderr)
+	output.Write(stdout)
+	output.Write(stderr)
 
 	runtime.Gosched()
 
-	logger.WriteString("$ git fetch origin\n")
+	glog.Println("$ git fetch origin")
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "git", "fetch", "origin")
 	if err != nil {
 		log.Errorf("Fail to git fetch: %v - %s", err, stderr)
 		return
 	}
-	logger.Write(stdout)
-	logger.Write(stderr)
+	output.Write(stdout)
+	output.Write(stderr)
 
 	runtime.Gosched()
 
-	logger.WriteString(fmt.Sprintf("$ git checkout %s\n", buildInfo.Task.Commit))
+	glog.Println(fmt.Sprintf("$ git checkout %s", buildInfo.Task.Commit))
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "git", "checkout", buildInfo.Task.Commit)
 	if err != nil {
 		log.Errorf("Fail to git checkout: %v - %s", err, stderr)
 		return
 	}
-	logger.Write(stdout)
-	logger.Write(stderr)
+	output.Write(stdout)
+	output.Write(stderr)
 
 	runtime.Gosched()
 
-	logger.WriteString(fmt.Sprintf("$ go build -v tags %s\n", tags))
+	glog.Println(fmt.Sprintf("$ go build -v tags %s", tags))
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "go", "build", "-v", "-tags", tags)
 	if err != nil {
 		log.Errorf("Fail to go build: %v - %s", err, stderr)
 		return
 	}
-	logger.Write(stdout)
-	logger.Write(stderr)
+	output.Write(stdout)
+	output.Write(stderr)
 
 	runtime.Gosched()
 
