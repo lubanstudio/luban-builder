@@ -24,7 +24,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
-const APP_VER = "0.1.4.0128"
+const APP_VER = "0.1.4.0129"
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -54,7 +54,7 @@ func main() {
 	var err error
 	MatricesData, err = ioutil.ReadFile(matricesFile)
 	if err != nil {
-		log.Fatalf("Fail to load '%s': %v", matricesFile)
+		log.Fatalf("Fail to load '%s': %v", matricesFile, err)
 	}
 
 	resp, _, errs := gorequest.New().Post(EndPoint+"/builder/matrix").
