@@ -69,21 +69,23 @@ func Build() {
 	runtime.Gosched()
 
 	// Checkout source code and compile.
-	glog.Println("$ git checkout master")
-	stdout, stderr, err := com.ExecCmdDirBytes(execDir, "git", "checkout", "master")
-	if err != nil {
+	if com.IsExist(execDir) {
+		glog.Println("$ git checkout master")
+		stdout, stderr, err := com.ExecCmdDirBytes(execDir, "git", "checkout", "master")
+		if err != nil {
+			output.Write(stderr)
+			log.Errorf("Fail to git checkout: %v - %s", err, stderr)
+			return
+		}
+		output.Write(stdout)
 		output.Write(stderr)
-		log.Errorf("Fail to git checkout: %v - %s", err, stderr)
-		return
-	}
-	output.Write(stdout)
-	output.Write(stderr)
 
-	runtime.Gosched()
+		runtime.Gosched()
+	}
 
 	tags := strings.Replace(buildInfo.Task.Tags, ",", " ", -1)
 	glog.Println(fmt.Sprintf("$ go get -u -v -tags %s %s", tags, buildInfo.ImportPath))
-	stdout, stderr, err = com.ExecCmdBytes("go", "get", "-u", "-v", "-tags", tags, buildInfo.ImportPath)
+	stdout, stderr, err := com.ExecCmdBytes("go", "get", "-u", "-v", "-tags", tags, buildInfo.ImportPath)
 	if err != nil {
 		output.Write(stderr)
 		log.Errorf("Fail to go get: %v - %s", err, stderr)
