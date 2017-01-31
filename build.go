@@ -72,6 +72,7 @@ func Build() {
 	glog.Println("$ git checkout master")
 	stdout, stderr, err := com.ExecCmdDirBytes(execDir, "git", "checkout", "master")
 	if err != nil {
+		output.Write(stderr)
 		log.Errorf("Fail to git checkout: %v - %s", err, stderr)
 		return
 	}
@@ -84,6 +85,7 @@ func Build() {
 	glog.Println(fmt.Sprintf("$ go get -u -v -tags %s %s", tags, buildInfo.ImportPath))
 	stdout, stderr, err = com.ExecCmdBytes("go", "get", "-u", "-v", "-tags", tags, buildInfo.ImportPath)
 	if err != nil {
+		output.Write(stderr)
 		log.Errorf("Fail to go get: %v - %s", err, stderr)
 		return
 	}
@@ -95,6 +97,7 @@ func Build() {
 	glog.Println("$ git fetch origin")
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "git", "fetch", "origin")
 	if err != nil {
+		output.Write(stderr)
 		log.Errorf("Fail to git fetch: %v - %s", err, stderr)
 		return
 	}
@@ -106,6 +109,7 @@ func Build() {
 	glog.Println(fmt.Sprintf("$ git checkout %s", buildInfo.Task.Commit))
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "git", "checkout", buildInfo.Task.Commit)
 	if err != nil {
+		output.Write(stderr)
 		log.Errorf("Fail to git checkout: %v - %s", err, stderr)
 		return
 	}
@@ -117,6 +121,7 @@ func Build() {
 	glog.Println(fmt.Sprintf("$ go build -v tags %s", tags))
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "go", "build", "-v", "-tags", tags)
 	if err != nil {
+		output.Write(stderr)
 		log.Errorf("Fail to go build: %v - %s", err, stderr)
 		return
 	}
@@ -136,6 +141,7 @@ func Build() {
 		case "tar.gz":
 			artifact, err := tz.Create(tmpPath)
 			if err != nil {
+				output.WriteString(err.Error())
 				log.Errorf("Fail to create artifact '%s': %v", tmpPath, err)
 				return
 			}
@@ -153,6 +159,7 @@ func Build() {
 		case "zip":
 			artifact, err := zip.Create(tmpPath)
 			if err != nil {
+				output.WriteString(err.Error())
 				log.Errorf("Fail to create artifact '%s': %v", tmpPath, err)
 				return
 			}
