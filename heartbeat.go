@@ -18,8 +18,8 @@ import (
 	"encoding/json"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/parnurzeal/gorequest"
+	log "gopkg.in/clog.v1"
 )
 
 type Status string
@@ -41,12 +41,12 @@ func Heartbeating() {
 		Set("X-LUBAN-TOKEN", Token).
 		Set("X-LUBAN-STATUS", string(status)).End()
 	if len(errs) > 0 {
-		log.Errorf("Fail to heart beat: %v", errs[0])
+		log.Error(0, "Fail to heart beat: %v", errs[0])
 		return
 	}
 
 	if resp.StatusCode/100 != 2 {
-		log.Errorf("Unexpected response status '%d' for heart beating.\n%s", resp.StatusCode, resp.Body)
+		log.Error(0, "Unexpected response status '%d' for heart beating.\n%s", resp.StatusCode, resp.Body)
 		return
 	}
 
@@ -55,7 +55,7 @@ func Heartbeating() {
 		if resp.Header.Get("X-LUBAN-TASK") == "ASSIGN" {
 			buildInfo = new(BuildInfo)
 			if err := json.NewDecoder(resp.Body).Decode(buildInfo); err != nil {
-				log.Errorf("NewDecoder: %v", err)
+				log.Error(0, "NewDecoder: %v", err)
 				return
 			}
 			status = STATUS_BUILDING

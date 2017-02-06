@@ -22,10 +22,10 @@ import (
 	"runtime"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/Unknwon/cae/tz"
 	"github.com/Unknwon/cae/zip"
 	"github.com/Unknwon/com"
+	log "gopkg.in/clog.v1"
 )
 
 type BuildInfo struct {
@@ -45,19 +45,19 @@ type BuildInfo struct {
 var buildInfo *BuildInfo
 
 func Build() {
-	log.Infof("Building task: %d - %s", buildInfo.Task.ID, buildInfo.ImportPath)
+	log.Info("Building task: %d - %s", buildInfo.Task.ID, buildInfo.ImportPath)
 
 	defer func() {
 		if status == STATUS_BUILDING {
 			status = STATUS_FAILED
 		}
-		log.Debugf("Status changed to: %s", status)
+		log.Trace("Status changed to: %s", status)
 	}()
 
 	os.Mkdir("log", os.ModePerm)
 	output, err := os.Create("log/" + com.ToStr(buildInfo.Task.ID) + ".output")
 	if err != nil {
-		log.Errorf("Fail to create log file: %v", err)
+		log.Error(0, "Fail to create log file: %v", err)
 		return
 	}
 	defer output.Close()
@@ -74,7 +74,7 @@ func Build() {
 		stdout, stderr, err := com.ExecCmdDirBytes(execDir, "git", "checkout", "master")
 		if err != nil {
 			output.Write(stderr)
-			log.Errorf("Fail to git checkout: %v - %s", err, stderr)
+			log.Error(0, "Fail to git checkout: %v - %s", err, stderr)
 			return
 		}
 		output.Write(stdout)
@@ -88,7 +88,7 @@ func Build() {
 	stdout, stderr, err := com.ExecCmdBytes("go", "get", "-u", "-v", "-tags", tags, buildInfo.ImportPath)
 	if err != nil {
 		output.Write(stderr)
-		log.Errorf("Fail to go get: %v - %s", err, stderr)
+		log.Error(0, "Fail to go get: %v - %s", err, stderr)
 		return
 	}
 	output.Write(stdout)
@@ -100,7 +100,7 @@ func Build() {
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "git", "fetch", "origin")
 	if err != nil {
 		output.Write(stderr)
-		log.Errorf("Fail to git fetch: %v - %s", err, stderr)
+		log.Error(0, "Fail to git fetch: %v - %s", err, stderr)
 		return
 	}
 	output.Write(stdout)
@@ -112,7 +112,7 @@ func Build() {
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "git", "checkout", buildInfo.Task.Commit)
 	if err != nil {
 		output.Write(stderr)
-		log.Errorf("Fail to git checkout: %v - %s", err, stderr)
+		log.Error(0, "Fail to git checkout: %v - %s", err, stderr)
 		return
 	}
 	output.Write(stdout)
@@ -124,7 +124,7 @@ func Build() {
 	stdout, stderr, err = com.ExecCmdDirBytes(execDir, "go", "build", "-v", "-tags", tags)
 	if err != nil {
 		output.Write(stderr)
-		log.Errorf("Fail to go build: %v - %s", err, stderr)
+		log.Error(0, "Fail to go build: %v - %s", err, stderr)
 		return
 	}
 	output.Write(stdout)
@@ -133,7 +133,7 @@ func Build() {
 	runtime.Gosched()
 
 	// Pack artifacts.
-	log.Infof("Packing artifacts: %d - %s", buildInfo.Task.ID, buildInfo.ImportPath)
+	log.Info("Packing artifacts: %d - %s", buildInfo.Task.ID, buildInfo.ImportPath)
 	os.Mkdir("artifacts", os.ModePerm)
 	artifactPath := path.Join("artifacts", com.ToStr(buildInfo.Task.ID))
 	for _, ext := range buildInfo.PackFormats {
@@ -144,7 +144,7 @@ func Build() {
 			artifact, err := tz.Create(tmpPath)
 			if err != nil {
 				output.WriteString(err.Error())
-				log.Errorf("Fail to create artifact '%s': %v", tmpPath, err)
+				log.Error(0, "Fail to create artifact '%s': %v", tmpPath, err)
 				return
 			}
 
@@ -162,7 +162,7 @@ func Build() {
 			artifact, err := zip.Create(tmpPath)
 			if err != nil {
 				output.WriteString(err.Error())
-				log.Errorf("Fail to create artifact '%s': %v", tmpPath, err)
+				log.Error(0, "Fail to create artifact '%s': %v", tmpPath, err)
 				return
 			}
 

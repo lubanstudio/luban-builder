@@ -19,20 +19,20 @@ import (
 	"io/ioutil"
 	"runtime"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/Unknwon/com"
 	"github.com/parnurzeal/gorequest"
+	log "gopkg.in/clog.v1"
 )
 
-const APP_VER = "0.1.6.0131"
+const APP_VER = "0.1.7.0206"
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
 
 func main() {
-	log.Info("Luban Builder ", APP_VER)
-	log.Info("GOMAXPROCS: ", runtime.NumCPU())
+	log.Info("Luban Builder %s", APP_VER)
+	log.Info("GOMAXPROCS: %d", runtime.NumCPU())
 
 	if len(EndPoint) == 0 {
 		fmt.Print("Please enter the server end point: ")
@@ -48,23 +48,23 @@ func main() {
 
 	matricesFile := "matrices.json"
 	if !com.IsFile(matricesFile) {
-		log.Fatalf("File '%s' not found, please define it first.", matricesFile)
+		log.Fatal(0, "File '%s' not found, please define it first.", matricesFile)
 	}
 
 	var err error
 	MatricesData, err = ioutil.ReadFile(matricesFile)
 	if err != nil {
-		log.Fatalf("Fail to load '%s': %v", matricesFile, err)
+		log.Fatal(0, "Fail to load '%s': %v", matricesFile, err)
 	}
 
 	resp, _, errs := gorequest.New().Post(EndPoint+"/builder/matrix").
 		Set("X-LUBAN-TOKEN", Token).
 		SendString(string(MatricesData)).End()
 	if len(errs) > 0 {
-		log.Fatalf("Fail to update matrix info: %v", errs[0])
+		log.Fatal(0, "Fail to update matrix info: %v", errs[0])
 	}
 	if resp.StatusCode/100 != 2 {
-		log.Fatalf("Unexpected response status '%d' for updating matrix info:\n%s", resp.StatusCode, resp.Body)
+		log.Fatal(0, "Unexpected response status '%d' for updating matrix info:\n%s", resp.StatusCode, resp.Body)
 	}
 
 	log.Info("All going well, start heart beating...")

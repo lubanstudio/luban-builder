@@ -15,8 +15,8 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/Unknwon/com"
+	log "gopkg.in/clog.v1"
 	"gopkg.in/ini.v1"
 )
 
@@ -31,6 +31,10 @@ var (
 )
 
 func init() {
+	if err := log.NewLogger(log.CONSOLE, log.ConsoleConfig{log.TRACE, 100}); err != nil {
+		panic(err.Error())
+	}
+
 	if !com.IsFile(ConfFile) {
 		Cfg = ini.Empty()
 		return
@@ -39,7 +43,7 @@ func init() {
 	var err error
 	Cfg, err = ini.Load(ConfFile)
 	if err != nil {
-		log.Fatalf("Fail to load '%s': %v", ConfFile, err)
+		log.Fatal(0, "Fail to load '%s': %v", ConfFile, err)
 	}
 
 	sec := Cfg.Section("")
@@ -49,7 +53,7 @@ func init() {
 
 func SaveSettings() {
 	if err := Cfg.SaveTo(ConfFile); err != nil {
-		log.Fatalf("Fail to save '%s': %v", ConfFile, err)
+		log.Fatal(0, "Fail to save '%s': %v", ConfFile, err)
 	}
 }
 

@@ -15,19 +15,19 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/Unknwon/com"
 	"github.com/parnurzeal/gorequest"
+	log "gopkg.in/clog.v1"
 )
 
 func Upload() {
-	log.Infof("Uploading artifacts for task: %d - %s", buildInfo.Task.ID, buildInfo.ImportPath)
+	log.Info("Uploading artifacts for task: %d - %s", buildInfo.Task.ID, buildInfo.ImportPath)
 
 	defer func() {
 		if status == STATUS_UPLOADING {
 			status = STATUS_FAILED
 		}
-		log.Debugf("Status changed to: %s", status)
+		log.Trace("Status changed to: %s", status)
 	}()
 
 	for _, ext := range buildInfo.PackFormats {
@@ -37,15 +37,15 @@ func Upload() {
 			Type("multipart").
 			SendFile("./artifacts/"+com.ToStr(buildInfo.Task.ID)+"."+ext, "", "artifact").End()
 		if len(errs) > 0 {
-			log.Errorf("Fail to upload artifact: %v", errs[0])
+			log.Error(0, "Fail to upload artifact: %v", errs[0])
 			return
 		}
 		if resp.StatusCode/100 != 2 {
-			log.Errorf("Unexpected response status '%d' for updating matrix info:\n%s", resp.StatusCode, resp.Body)
+			log.Error(0, "Unexpected response status '%d' for updating matrix info:\n%s", resp.StatusCode, resp.Body)
 			return
 		}
 	}
 
-	log.Infof("Artifacts for task '%d' uploaded", buildInfo.Task.ID)
+	log.Info("Artifacts for task '%d' uploaded", buildInfo.Task.ID)
 	status = STATUS_SUCCEED
 }
