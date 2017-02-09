@@ -31,7 +31,7 @@ var (
 )
 
 func init() {
-	if err := log.NewLogger(log.CONSOLE, log.ConsoleConfig{log.TRACE, 100}); err != nil {
+	if err := log.New(log.CONSOLE, log.ConsoleConfig{}); err != nil {
 		panic(err.Error())
 	}
 

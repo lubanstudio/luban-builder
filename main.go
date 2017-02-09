@@ -24,7 +24,7 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
-const APP_VER = "0.1.7.0206"
+const APP_VER = "0.1.7.0208"
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
