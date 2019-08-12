@@ -15,7 +15,7 @@
 package main
 
 import (
-	"github.com/Unknwon/com"
+	"github.com/unknwon/com"
 	log "gopkg.in/clog.v1"
 	"gopkg.in/ini.v1"
 )

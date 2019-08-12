@@ -24,7 +24,7 @@ import (
 
 	"github.com/Unknwon/cae/tz"
 	"github.com/Unknwon/cae/zip"
-	"github.com/Unknwon/com"
+	"github.com/unknwon/com"
 	log "gopkg.in/clog.v1"
 )
 

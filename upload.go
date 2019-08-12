@@ -15,7 +15,7 @@
 package main
 
 import (
-	"github.com/Unknwon/com"
+	"github.com/unknwon/com"
 	"github.com/parnurzeal/gorequest"
 	log "gopkg.in/clog.v1"
 )
